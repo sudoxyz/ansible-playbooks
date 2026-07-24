@@ -1,0 +1,18 @@
+---
+- name: Deploy Multiple SSH Public Keys to Root User on Servers
+  hosts: debian_servers
+  gather_facts: false
+  remote_user: root
+
+  vars:
+    ssh_public_keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMXIjntmwPSWM/hZ5G8h3q+YuEvu5D3jsM1Foz09OBqX ethan@DESKTOP-U5MEQBI"
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDcgjrbd44qyB7AHqbVQObHppcUXgrXnN/5qMI9gSfL6 ethan@ethan-laptop"
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKRPhnR2y2lmibIV+y70J/2+shq6qpz18gCmO7q4x1Y5 root@ansible"
+
+  tasks:
+    - name: Ensure specified public keys are present in root's authorized_keys
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ ssh_public_keys | join('\n') }}"
