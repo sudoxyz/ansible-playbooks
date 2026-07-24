@@ -2,22 +2,27 @@
 - name: Bootstrap Root Password and SSH Keys on Proxmox LXCs
   hosts: tag_deploy
   gather_facts: false
-  connection: community.proxmox.lxc
+
+  connection: community.proxmox.proxmox_pct_remote
 
   vars:
-    proxmox_host: "192.168.1.114"
+    ansible_host: "192.168.1.114"
+    ansible_user: "root"
     proxmox_node: "pve1"
 
   tasks:
-    - name: Update root user password
+    - name: Update root user password inside container
       ansible.builtin.user:
         name: root
         password: "{{ hash }}"
-      delegate_to: "{{ proxmox_host }}"
 
-    - name: Ensure all public keys are present in root's authorized_keys
+    - name: Ensure SSH public keys are present in root's authorized_keys
       ansible.posix.authorized_key:
         user: root
         state: present
         key: "{{ ssh_public_keys }}"
-      delegate_to: "{{ proxmox_host }}"
+
+    - name: Remove 'deploy' tag from container using pvesh on Proxmox
+      ansible.builtin.command: >
+        pvesh set /nodes/{{ proxmox_node }}/lxc/{{ inventory_hostname }}/config --tags ""
+      delegate_to: "{{ ansible_host }}"
