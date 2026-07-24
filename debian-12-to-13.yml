@@ -1,0 +1,88 @@
+---
+- name: Debian 12 (Bookworm) to Debian 13 (Trixie)
+  hosts: debian_servers
+  become: true
+  vars:
+    apt_env:
+      DEBIAN_FRONTEND: noninteractive
+    dpkg_opts: "force-confdef,force-confold"
+
+  tasks:
+    - name: Ensure target host is running Debian 12
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['os_family'] == 'Debian'
+          - ansible_facts['distribution_major_version'] == '12'
+        fail_msg: "This playbook can only upgrade Debian 12 hosts."
+        success_msg: "Host is confirmed running Debian 12."
+
+    - name: Refresh APT cache and upgrade all Debian 12 packages
+      ansible.builtin.apt:
+        update_cache: yes
+        upgrade: dist
+        autoremove: yes
+        autoclean: yes
+        dpkg_options: "{{ dpkg_opts }}"
+      environment: "{{ apt_env }}"
+      
+    - name: Replace 'bookworm' with 'trixie' in /etc/apt/sources.list
+      ansible.builtin.replace:
+        path: /etc/apt/sources.list
+        regexp: 'bookworm'
+        replace: 'trixie'
+        backup: yes
+
+    - name: Replace 'bookworm' with 'trixie' in /etc/apt/sources.list.d files (.list)
+      ansible.builtin.replace:
+        path: "{{ item }}"
+        regexp: 'bookworm'
+        replace: 'trixie'
+        backup: yes
+      with_fileglob:
+        - "/etc/apt/sources.list.d/*.list"
+
+    - name: Replace 'bookworm' with 'trixie' in DEB822 sources (.sources)
+      ansible.builtin.replace:
+        path: "{{ item }}"
+        regexp: 'bookworm'
+        replace: 'trixie'
+        backup: yes
+      with_fileglob:
+        - "/etc/apt/sources.list.d/*.sources"
+
+    - name: Update APT cache using new Trixie repositories
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Perform minimal package upgrade (without installing new packages)
+      ansible.builtin.command:
+        cmd: apt-get upgrade --without-new-pkgs -y -o Dpkg::Options::="--{{ dpkg_opts }}"
+      environment: "{{ apt_env }}"
+      changed_when: true
+
+    - name: Perform full system upgrade to Debian 13
+      ansible.builtin.apt:
+        upgrade: full
+        dpkg_options: "{{ dpkg_opts }}"
+      environment: "{{ apt_env }}"
+
+    - name: Remove obsolete and unnecessary packages
+      ansible.builtin.apt:
+        autoremove: yes
+        purge: yes
+        autoclean: yes
+
+    - name: Reboot server into new Debian 13 kernel
+      ansible.builtin.reboot:
+        msg: "Rebooting system to complete upgrade to Debian 13 (Trixie)"
+        reboot_timeout: 600
+
+    - name: Gather updated system facts
+      ansible.builtin.setup:
+
+    - name: Verify system version after reboot
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['distribution_major_version'] == '13'
+        fail_msg: "Upgrade check failed. System major version is {{ ansible_facts['distribution_major_version'] }}."
+        success_msg: "System successfully upgraded to Debian 13!"
