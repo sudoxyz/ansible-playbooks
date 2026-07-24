@@ -21,8 +21,3 @@
         state: present
         key: "{{ ssh_public_keys }}"
       delegate_to: "{{ proxmox_host }}"
-
-    - name: Remove 'Auto Patch' tag from container using pvesh CLI
-      ansible.builtin.command: >
-        pvesh set /nodes/{{ proxmox_node }}/lxc/{{ inventory_hostname }}/config --tags ""
-      delegate_to: "{{ proxmox_host }}"
