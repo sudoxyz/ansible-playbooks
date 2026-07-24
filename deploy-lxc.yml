@@ -1,19 +1,28 @@
 ---
 - name: Bootstrap Root Password and SSH Keys on Proxmox LXCs
-  hosts: tag_deploy
+  hosts: tag_auto_patch
   gather_facts: false
+  connection: community.proxmox.proxmox
 
-  connection: community.general.proxmox
-  delegate_to: 192.168.1.114
+  vars:
+    proxmox_host: "192.168.1.114"
+    proxmox_node: "pve1"
 
   tasks:
     - name: Update root user password
       ansible.builtin.user:
         name: root
         password: "{{ hash }}"
+      delegate_to: "{{ proxmox_host }}"
 
     - name: Ensure all public keys are present in root's authorized_keys
       ansible.posix.authorized_key:
         user: root
         state: present
         key: "{{ ssh_public_keys }}"
+      delegate_to: "{{ proxmox_host }}"
+
+    - name: Remove 'Auto Patch' tag from container using pvesh CLI
+      ansible.builtin.command: >
+        pvesh set /nodes/{{ proxmox_node }}/lxc/{{ inventory_hostname }}/config --tags ""
+      delegate_to: "{{ proxmox_host }}"
