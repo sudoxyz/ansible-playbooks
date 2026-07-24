@@ -21,7 +21,3 @@
         user: root
         state: present
         key: "{{ ssh_public_keys }}"
-
-    - name: Remove 'deploy' tag from container
-      ansible.builtin.command: >
-        pvesh set /nodes/{{ proxmox_node }}/lxc/{{ inventory_hostname }}/config --tags ""
