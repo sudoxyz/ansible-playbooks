@@ -1,6 +1,6 @@
 ---
 - name: Debian 12 (Bookworm) to Debian 13 (Trixie)
-  hosts: debian_servers
+  hosts: debian_12_to_13
   become: true
   vars:
     apt_env:
