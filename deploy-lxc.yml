@@ -1,6 +1,6 @@
 ---
 - name: Bootstrap Root Password and SSH Keys on Proxmox LXCs
-  hosts: tag_auto_patch
+  hosts: tag_deploy
   gather_facts: false
 
   connection: community.general.proxmox
