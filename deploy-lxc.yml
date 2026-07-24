@@ -2,7 +2,7 @@
 - name: Bootstrap Root Password and SSH Keys on Proxmox LXCs
   hosts: tag_deploy
   gather_facts: false
-  connection: community.proxmox.proxmox
+  connection: community.proxmox.lxc
 
   vars:
     proxmox_host: "192.168.1.114"
