@@ -1,0 +1,19 @@
+---
+- name: Bootstrap Root Password and SSH Keys on Proxmox LXCs
+  hosts: tag_auto_patch
+  gather_facts: false
+
+  connection: community.general.proxmox
+  delegate_to: 192.168.1.114
+
+  tasks:
+    - name: Update root user password
+      ansible.builtin.user:
+        name: root
+        password: "{{ hash }}"
+
+    - name: Ensure all public keys are present in root's authorized_keys
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ ssh_public_keys }}"
