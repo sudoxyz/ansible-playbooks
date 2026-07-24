@@ -1,7 +1,9 @@
 ---
-- name: Patch and Update Debian Servers
-  hosts: debian_servers
-  become: true
+- name: Patch and Update Debian LXC Containers
+  hosts: tag_auto_patch
+  gather_facts: true
+  remote_user: root
+
   vars:
     auto_reboot: true
     reboot_timeout: 300
