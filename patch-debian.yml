@@ -1,6 +1,6 @@
 ---
 - name: Patch and Update Debian LXC Containers
-  hosts: tag_auto_patch
+  hosts: tag_autopatch
   gather_facts: true
   remote_user: root
 
